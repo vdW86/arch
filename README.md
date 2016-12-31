@@ -1,0 +1,2 @@
+# arch
+Standard Arch script
