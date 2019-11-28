@@ -1,0 +1,80 @@
+#!/bin/bash
+
+bin="$(basename $0)"
+pkg_root="$HOME/pkg"
+makepkgargs="-d"
+url="https://aur.archlinux.org/cgit/aur.git/snapshot"
+verbose=0
+fake=0
+
+while getopts ":a:d:h" option; do
+	case "${option}" in
+		a)
+			makepkgargs="$OPTARG"
+			;;
+		d)
+			pkg_root="$OPTARG"
+			;;
+		h)
+			help
+			exit 0
+			;;
+		\?)
+			echo "$bin: invalid option -$OPTARG"
+			echo
+			exit 1
+			;;
+		:)
+			echo "$bin: option -$OPTARG requires an argument"
+			echo
+			exit 1
+			;;
+	esac
+done
+
+echo "package root = $pkg_root"
+echo "makepkg arguments = $makepkgargs"
+echo
+
+shift $((OPTIND-1))
+
+if [ $# -eq 0 ]; then
+	echo "$bin: must specify at least one package"
+	exit 1
+fi
+
+cd "$pkg_root/"
+
+old="$OLDPWD"
+
+for pkg_name in "$@"; do
+	echo "fetching '$pkg_name'"
+		
+	# probably a better way to get / verify this file?
+	curl -L -O "$url/$pkg_name.tar.gz" 2> /dev/null
+
+	tar xvf "$pkg_name.tar.gz" 2> /dev/null
+
+	if [ $? -ne 0 ]; then
+		echo "$bin: package '$pkg_name' does not exist or has been removed"
+		rm "$pkg_name.tar.gz"
+		continue
+	fi
+	# end block
+
+		rm -v "$pkg_name.tar.gz"
+	
+	cd "$pkg_name/"
+	makepkg -s
+	cp *.pkg.tar.xz "$pkg_root"
+	cd "$pkg_root"
+	
+	# "delete extracted package contents"	
+	
+		rm -rfv "$pkg_name"
+	
+	
+	echo
+done
+
+cd "$old"
