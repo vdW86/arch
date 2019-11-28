@@ -1,0 +1,67 @@
+###########################################
+#############Tijdzone instellen############
+###########################################
+ln -s /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
+hwclock --systohc --utc
+###########################################
+#############Locale instellen##############
+###########################################
+# Locale invullen Nederland dus nl_NL.UTF-8
+sed -i 's/^#nl_NL.UTF-8 UTF-8 /nl_NL.UTF-8 UTF-8 /' /etc/locale.gen
+locale-gen
+echo LANG=nl_NL.UTF-8 > /etc/locale.conf
+export LANG=nl_NL.UTF-8
+###########################################
+#############Pacman instellen##############
+###########################################
+sed -i 's/^#Color/Color/' /etc/pacman.conf
+sed -i '/#VerbosePkgLists/a ILoveCandy' /etc/pacman.conf
+#Multilib
+sed -i 's/^#\[multilib]/\[multilib]/' /etc/pacman.conf
+sed -i '/\[multilib]/{n;s/^#Include/Include/}' /etc/pacman.conf
+#AUR
+echo " " >> /etc/pacman.conf
+echo "#Extras---------------------- " >> /etc/pacman.conf
+echo " " >> /etc/pacman.conf
+echo "[archlinuxfr]" >> /etc/pacman.conf
+echo "SigLevel = Never" >> /etc/pacman.conf
+echo "Server = http://repo.archlinux.fr/\$arch" >> /etc/pacman.conf
+pacman -Syy
+###########################################
+##########Gebruikersnaam invoeren##########
+###########################################
+echo "Gebruikersnaam invullen :" 
+read varname
+###########################################
+##############Passwd en User###############
+###########################################
+echo "Root wachtwoord ingeven"
+passwd
+echo "Gebruiker Toevoegen"
+useradd -m -g users -G wheel,storage,power -s /bin/bash $varname
+passwd $varname
+###########################################
+##############Host instellen###############
+###########################################
+echo arch-$varname > /etc/hostname
+echo -e "127.0.0.1	localhost\n::1		localhost \n127.0.1.1	arch-$varname.localdomain	arch-$varname \n" >> /etc/hosts
+###########################################
+#############Sudoers aanpassen#############
+###########################################
+sed -i 's/^# %wheel ALL=(ALL) ALL/ %wheel ALL=(ALL) ALL/' /etc/sudoers
+echo " " >> /etc/sudoers
+echo "Defaults rootpw" >> /etc/sudoers 
+###########################################
+#############Pakketten install#############
+###########################################
+pacman -S bash-completion dhcpcd nano pacman-contrib grub linux xorg-server xorg-xclock xorg-xinit xterm --noconfirm
+###########################################
+###########################################
+echo "Welke schijf moet Grub geinstalleerd worden? (sda) :" 
+read string
+grub-install --target=i386-pc /dev/$string
+grub-mkconfig -o /boot/grub/grub.cfg
+
+
+
+

@@ -1,0 +1,18 @@
+echo "###################################"
+echo "##########script voor base#########"
+echo "###################################"
+echo "Hij gaat nu de servers van mirrorlist op snelheid sorteren ,kan even duren. Geduld AUB...."
+cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
+sed -i '/^## Netherlands$/{n;s/^##Server/Server/}' /etc/pacman.d/mirrorlist.backup
+rankmirrors -n 6 /etc/pacman.d/mirrorlist.backup > /etc/pacman.d/mirrorlist
+echo "mirrorcheck"
+pacman -Syy
+echo "base install"
+pacstrap -i /mnt base base-devel --noconfirm
+echo "fstab genereren"
+genfstab -U -p /mnt >> /mnt/etc/fstab
+echo "chroot kopieeren"
+cp chroot /mnt/etc/skel/
+echo "###################################"
+echo "###########The End#################"
+echo "###################################"
